@@ -1,0 +1,271 @@
+---
+title: "Ketimpangan Ekonomi di Indonesia pada Tahun 2021"
+author: "Elizabeth Evangeline Martin, Stacie Monica"
+date: "2024-06-26"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+#Load packages
+library(dplyr) #data manipulation
+library(tidyr) #tidy messy data
+library(reshape2) #reshape
+library(heatmaply) #visualisasi heatmap
+library(visdat) #visualisasi missing value
+library(ggplot2) #visualisasi
+library(psych) #statistical
+library(DataExplorer) #eksplorasi data
+library(corrplot) #visualisasi correlation plot
+library(tidyverse) #manipulasi & analisis data
+library(plotly)
+```
+
+
+# Table of Contents  
+1. Introduction  
+2. Data Description  
+3. Data Preprocessing  
+    3.1 Imputasi *missing value*  
+    3.2` *Encoding* variabel kategorikal  
+4. Data Exploration  
+    4.1 Struktur data  
+    4.2 Variabel dan deskripsinya  
+    4.3 Variabel dan tipe datanya  
+    4.4 *Summary statistics*  
+    4.5 *Unique value*  
+    4.6 Visualisasi Data  
+        - Histogram untuk variabel numerik  
+        - Correlation plot  
+        - Bar plot untuk persentase penduduk miskin di berbagai daerah  
+        - scatter plot untuk hubungan antara PDB regional dan harapan hidup
+        - bar chart untuk pengeluaran per kapita di berbagai daerah 
+        - boxplot untuk distribusi rata-rata lama sekolah 
+        - scatter plot antara penduduk miskin, pengeluaran per kapita dan per provinsi 
+5. Discussion  
+6. Conclusion  
+7. References  
+
+
+# 1. Introduction
+Pada laporan ini, akan kami sajikan analisis sosio-ekonomi di Indonesia pada tahun 2021 berdasarkan data yang dikumpulkan dari beberapa laporan dalam Badan Pusat Statistik (BPS). Data ini mencakup berbagai indikator penting dari berbagai daerah, termasuk provinsi dan kota/kabupaten, yang meliputi persentase penduduk miskin, Produk Domestik Regional Bruto (PDRB) dalam miliar, angka harapan hidup (AHH), rata-rata lama sekolah, dan pengeluaran per kapita. Analisis ini juga akan fokus pada Sustainable Development Goal (SDG) ke-10, yaitu mengurangi ketimpangan ekonomi.
+
+Topik ini penting karena kondisi sosio-ekonomi memiliki dampak signifikan terhadap kualitas hidup masyarakat dan perkembangan daerah. Analisis ini akan membantu kita memahami berbagai aspek kehidupan di Indonesia dan bagaimana mereka saling mempengaruhi. Dengan memahami kondisi sosio-ekonomi di berbagai daerah, kita dapat mengidentifikasi daerah yang memerlukan perhatian khusus dan merumuskan kebijakan yang lebih efektif untuk meningkatkan kesejahteraan masyarakat dan mengurangi ketimpangan ekonomi.
+
+Laporan ini ditujukan untuk peneliti, pemangku kepentingan, dan pihak lain yang tertarik pada kondisi sosio-ekonomi di Indonesia. Tujuan analisis ini adalah untuk mengidentifikasi tren dan pola dalam indikator sosio-ekonomi serta faktor-faktor kritis yang mempengaruhinya, dengan fokus untuk menjawab beberapa pertanyaan penting, yaitu:
+
+- Bagaimana distribusi dan tren persentase penduduk miskin di berbagai daerah di Indonesia pada tahun 2021?
+- Bagaimana hubungan antara PDRB dan tingkat kemiskinan di berbagai daerah?
+- Apa yang mempengaruhi angka harapan hidup dan rata-rata lama sekolah di berbagai daerah?
+- Bagaimana ketimpangan ekonomi mempengaruhi indikator sosio-ekonomi lainnya?
+
+Metode yang kami gunakan adalah Exploratory Data Analysis (EDA). EDA adalah pendekatan untuk menganalisis kumpulan data guna merangkum karakteristik utamanya, sering kali menggunakan grafik statistik dan metode visualisasi data lainnya (Wikipedia). Kami menggunakan metode EDA karena sesuai untuk mencapai tujuan analisis ini dan memberikan hasil yang akurat serta mendalam. Metode statistik yang kami pakai untuk menganalisis korelasi antara satu variabel dengan lainnya yaitu Pearson Correlation. Pearson correlation digunakan untuk mengetahui keeratan hubungan antara variabel dependen dan independen, dengan nilai berkisar antara -1 hingga 1. Jika bernilai positif, hubungan tersebut menunjukkan searah dan bersifat bertambah, dan sebaliknya jika bernilai negatif maka menunjukkan hubungan searah dan bersifat berkurang (Statistika UB).
+
+Analisis ini dilakukan dengan asumsi bahwa data yang tersedia representatif dan akurat. Namun, perlu diakui bahwa analisis ini memiliki batasan, seperti keterbatasan dalam variasi data yang mungkin tidak mencakup seluruh aspek sosio-ekonomi secara mendalam. Laporan ini diharapkan memberikan wawasan mendalam dan membantu pembaca dalam memahami kondisi sosio-ekonomi di Indonesia pada tahun 2021, serta mendukung pengambilan keputusan yang lebih baik terkait upaya peningkatan kesejahteraan masyarakat dan pengurangan ketimpangan ekonomi di berbagai daerah di Indonesia.
+
+
+# 2. Data Description
+Dataset ini diambil dari sumber terbuka di Kaggle, dengan link berikut: [Socio-Economic of Indonesia in 2021] https://www.kaggle.com/datasets/dannytheodore/socio-economic-of-indonesia-in-2021?resource=download
+
+```{r}
+df<-read.csv(file.choose(), sep=",", header=T)
+head(df)
+```
+
+Dataset ini terdiri dari beberapa kolom yang menjelaskan berbagai parameter dan kategori kondisi sosio-ekonomi di Indonesia pada tahun 2021. Berikut adalah rincian variabel dalam dataset:
+
+**province**                : Nama provinsi di Indonesia.
+**cities_reg**              : Nama kota atau kabupaten di Indonesia.
+**poorpeople_percentage**   : Persentase penduduk miskin di setiap kota/kabupaten.
+**reg_gdp**                 : Produk Domestik Regional Bruto (PDRB) dalam miliar rupiah.
+**life_exp**                : Angka harapan hidup di setiap kota/kabupaten.
+**avg_schooltime**          : Rata-rata lama sekolah di setiap kota/kabupaten, diukur dalam tahun.
+**exp_percap**              : Pengeluaran rata-rata per kapita di setiap kota/kabupaten.
+
+Data ini sangat relevan untuk menganalisis kondisi sosio-ekonomi di berbagai daerah di Indonesia pada tahun 2021. Mengingat dampak signifikan dari faktor-faktor sosio-ekonomi terhadap kualitas hidup masyarakat, analisis data ini dapat memberikan wawasan yang berharga untuk pengambilan keputusan dan kebijakan terkait upaya peningkatan kesejahteraan masyarakat dan pengurangan ketimpangan ekonomi.
+
+
+# 3. Data Preprocessing
+### Imputasi *missing value*
+untuk menghandle adanya missing value, kami terlebih dahulu ingin mengecek apakah ada missing value di dalam data dan melihat distribusi dari variabel-variabel tersebut.
+```{r}
+df <- data.frame(lapply(df, function(x) replace(x, x == "", NA))) #memperjelas nilai kosong ("") menjadi NA
+sapply(df, function(x) sum(is.na(x))) #menghitung jumlah missing values di data
+```
+Dapat dilihat bahwa semua variabel numerik berdistribusi normal (0) sehingga tidak perlu lagi mengubah data yang ada.
+
+### *Encoding* variabel kategorikal
+Selain itu, **encoding** juga diperlukan agar variabel kategorikal dapat diinterpretasikan atau diproses secara benar oleh algoritma atau model analisis data.
+```{r}
+df$province<-as.factor(df$province)
+df$cities_reg<-as.factor(df$cities_reg)
+```
+
+
+
+# 4. Data Exploration
+### Struktur data
+```{r}
+str(df)
+```
+Terdapat 514 observasi/records dengan 7 variabel di dataset.
+
+### Variabel dan deskripsinya
+```{r}
+names(df)
+```
+**province**                : Nama provinsi di Indonesia.
+**cities_reg**              : Nama kota atau kabupaten di Indonesia.
+**poorpeople_percentage**   : Persentase penduduk miskin di setiap kota/kabupaten.
+**reg_gdp**                 : Produk Domestik Regional Bruto (PDRB) dalam miliar rupiah.
+**life_exp**                : Angka harapan hidup di setiap kota/kabupaten.
+**avg_schooltime**          : Rata-rata lama sekolah di setiap kota/kabupaten, diukur dalam tahun.
+**exp_percap**      : Pengeluaran rata-rata per kapita di setiap kota/kabupaten.
+
+### Variabel dan tipe datanya
+```{r}
+sapply(df, function(x) class(x)) # menampilkan semua variabel dan tipe datanya (class)
+```
+Tipe variabel dalam dataset divariasikan dengan 2 variabel kategorikal, yaitu provinsi dan kota/kabupaten serta 4 variabel numerik, yaitu persentase penduduk miskin, pdrb, angka harapan hidup, dan rata-rata lama sekolah. yang terakhir adalah 1 variabel integer yaitu pengeluaran per kapita.
+
+### *Summary statistics*
+```{r}
+summary(df)
+```
+
+### *Unique value*
+```{r}
+sapply(df, function(x) length(unique(x))) 
+```
+Indonesia memiliki 34 provinsi sehingga **unique value** pada province adalah 34.lalu di Indonesia terdapat 98 kota dan 416 kabupaten sehingga dalam data bagian cities_reg terisi 514 **unique value**. selanjutnya poorpeople_percentage, reg_gdp, life_exp, avg_schooltime, dan exp_percap merupakan **unique value** juga karena setiap kota dan kabupaten memiliki data yang berbeda-beda.
+
+#### Value yang paling banyak muncul
+Value yang memiliki jumlah kemunculan paling banyak yaitu "Jawa Timur" pada kolom Province.
+
+
+
+### Visualisasi Data
+#### Histogram untuk variabel numerik
+```{r}
+num_cols <- unlist(lapply(df, is.numeric)) #menerapkan fungsi is.numeric ke setiap kolom dalam df
+df_num <- df[ , num_cols]  #subset df untuk keep hanya variabel numerik
+d <- melt(df_num) #mengubah format dataframe menjadi panjang 
+
+ggplotly(ggplot(d, aes(x=value)) +
+  facet_wrap(~variable, scales = "free_x") + #facet_wrap untuk buat plot berdasarkan variabel dengan sumbu x menyesuaikan
+  geom_histogram()
+)
+```
+Dari visualisasi ini, terlihat bahwa variabel  exp_percap menunjukkan distribusi yang paling mendekati merata walaupun memang tidak merata, sementara variabel lainnya cenderung memiliki distribusi lebih terkonsentrasi di sekitar nilai-nilai tertentu. Insight penting adalah keberadaan beberapa outlier yang walaupun dapat mempengaruhi analisis data, akan kami hiraukan secara sengaja karena jika kami mengotak-atik nilai-nilai tersebut, data dapat menjadi kacau dan tidak akurat lagi.
+
+
+#### Correlation plot
+```{r}
+cr <- cor(df[, c(3:7)], use = "complete.obs") #korelasi antara konsentrasi partikulat dalam udara
+corrplot(cr, method = 'number', shade.col=NA, tl.col="black", tl.srt=45) #correlation plot
+cor(df[, c(3:7)])
+```
+Secara umum, visualisasi tersebut tidak menunjukkan adanya korelasi yang sangat kuat di antara variabel-variabel dalam data. Korelasi dianggap kuat jika nilai absolutnya mendekati 1.
+
++ Korelasi positif terlemah adalah antara variabel reg_gdp dan avg_schooltime (0.165)  
++ Korelasi positif terkuat adalah antara variabel avg_schooltime dan exp_percap (0.668) 
+- Korelasi negatif terlemah adalah antara variabel poorpeople_percentage dan reg_gdp (-0.078)  
+- Korelasi negatif terkuat adalah antara variabel poorpeople_percentage dan exp_percap (-0.644)  
+
+Korelasi positif berarti bahwa ketika satu variabel meningkat, variabel lainnya cenderung meningkat juga, sedangkan korelasi negatif berarti bahwa ketika satu variabel meningkat, variabel lainnya cenderung menurun. Korelasi yang dekat dengan nol (baik positif maupun negatif) menunjukkan hubungan yang sangat lemah atau tidak ada antara variabel-variabel tersebut.
+
+Dalam konteks ketimpangan ekonomi, korelasi antara berbagai indikator sosio-ekonomi dapat membantu memahami bagaimana faktor-faktor seperti pendidikan, pendapatan, dan pengeluaran mempengaruhi tingkat kemiskinan dan ketimpangan di berbagai daerah. Korelasi yang lebih kuat mungkin menunjukkan bahwa peningkatan di satu aspek (misalnya, pendidikan) dapat berkontribusi signifikan terhadap perbaikan di aspek lainnya (misalnya, pendapatan per kapita), sementara korelasi yang lebih lemah menunjukkan hubungan yang lebih kompleks atau tidak langsung.
+
+
+#### Bar plot untuk persentase penduduk miskin di berbagai daerah
+```{r}
+plot_ly(
+  df,
+  x = ~reorder(province, -poorpeople_percentage),
+  y = ~poorpeople_percentage,
+  type = 'bar',
+  marker = list(color = 'blue')
+)%>% layout(
+  title = "Persentase Penduduk Miskin di Berbagai Daerah",
+  xaxis = list(title = "Daerah"),
+  yaxis = list(title = "Persentase Penduduk Miskin"),
+  barmode = 'group',
+  bargap = 0.2,
+  bargroupgap = 0.1
+)
+```
+Dari visualisasi di atas, terlihat bahwa Papua merupakan wilayah dengan persentase penduduk miskin tertinggi. Hal ini menunjukkan adanya masalah serius dalam distribusi kesejahteraan di provinsi ini, yang mungkin disebabkan oleh berbagai faktor seperti akses terbatas ke pendidikan, layanan kesehatan, dan peluang ekonomi.
+
+Selain itu, ketimpangan ekonomi antar provinsi juga terlihat cukup mencolok. Sebagai contoh, perbedaan persentase penduduk miskin antara Sulawesi Barat dan Sulawesi Utara sangat drastis. Di Sulawesi Barat, persentase penduduk miskin jauh lebih tinggi dibandingkan dengan Sulawesi Utara, yang menunjukkan adanya perbedaan signifikan dalam kondisi ekonomi dan sosial di dua wilayah ini meskipun berada di pulau yang sama.
+
+
+#### scatter plot untuk hubungan antara PDB regional dan harapan hidup
+```{r}
+ggplot(df, aes(x = reg_gdp, y = life_exp)) +
+  geom_point(color = "blue", size = 3) +
+  labs(title = "Hubungan antara PDB Regional dan Harapan Hidup",
+       x = "PDB Regional (dalam milyar Rupiah)",
+       y = "Harapan Hidup (tahun)") +
+  theme_minimal()
+```
+Dari visualisasi diatas, erlihat bahwa mayoritas wilayah memiliki harapan hidup yangg relatif sama. hal ini dapat dilihat dari konsentrasi titik yang padat di berbagai tempat. tetapi disisi lain, arah PDB menunjukan pola yang berbeda, dimana mayoritas titik berada di rentang nilai PDB yang lebih rendah. ini menandakan bahwa sebagian besar wilayah memiliki PDB yang cenderung lebih rendah. sehingga dapat dibilang bahwa meskipun harapan hidup cenderung sama di banyak wilayah, tetapi ketimpangan ekonomi terjadi secara signifikan. wilayah tertentu memiliki PDB yang jauh lebih tinggi dibanding dengan wilayah lainnya.
+
+
+#### bar chart untuk pengeluaran per kapita di berbagai daerah
+```{r}
+ggplot(df, aes(x = reorder(province, -exp_percap), y = exp_percap)) +
+  geom_bar(stat = "identity", fill = "orange") +
+  coord_flip() +
+  labs(title = "Pengeluaran Per Kapita di Berbagai Daerah",
+       x = "Daerah",
+       y = "Pengeluaran Per Kapita (Rupiah)") +
+  theme_minimal()
+```
+Dari visualisasi diatas terlihat bahwa Jawa Timur, Jawa Tengah, dan Sumatera Utara menjadi wilayah dengan pengeluaran per kapita tertinggi. Namun, yang menarik, Papua juga terlihat memiliki tingkat pengeluaran per kapita yang signifikan meskipun sebelumnya dikenal dengan tingkat kemiskinan yang tinggi. Hal ini mengindikasikan adanya disparitas ekonomi yang kompleks di dalamnya, di mana keberadaan sektor ekonomi tertentu mungkin berdampak pada daya beli yang tinggi di wilayah tersebut.
+
+
+#### boxplot untuk distribusi rata-rata lama sekolah
+```{r}
+ggplot(df, aes(x = "", y = avg_schooltime)) +
+  geom_boxplot(fill = "purple") +
+  labs(title = "Distribusi Rata-Rata Lama Sekolah",
+       x = "",
+       y = "Rata-Rata Lama Sekolah (Tahun)") +
+  theme_minimal()
+```
+Distribusi rata-rata lama sekolah menunjukkan bahwa mayoritas wilayah memiliki tingkat pendidikan formal yang cukup konsisten, berkisar antara 7,5 hingga 9,5 tahun. Namun, terlihat adanya ketimpangan yang signifikan di beberapa wilayah, yang tercermin dari outlier yang berada di bawah 5 tahun dan di atas 12 tahun. Hal ini mengindikasikan bahwa sementara sebagian besar wilayah memiliki akses pendidikan yang relatif stabil, ada beberapa wilayah yang memiliki akses pendidikan yang sangat rendah atau, sebaliknya, jauh lebih tinggi dibandingkan dengan yang lain.
+
+
+#### scatter plot antara penduduk miskin, pengeluaran per kapita dan per provinsi
+```{r}
+ggplot(df, aes(x = poorpeople_percentage, y = exp_percap, color = province)) +
+  geom_point(alpha = 0.7, size = 3) +
+  labs(title = "Hubungan antara Persentase Penduduk Miskin dan Pengeluaran Per Kapita per Provinsi",
+       x = "Persentase Penduduk Miskin",
+       y = "Pengeluaran Per Kapita (Rupiah)",
+       color = "Provinsi") +
+  theme_minimal()
+```
+
+Grafik ini mengungkapkan adanya ketimpangan signifikan dalam distribusi kemiskinan dan pengeluaran per kapita di Indonesia. Sementara banyak provinsi memiliki tingkat kemiskinan yang relatif rendah dan pengeluaran per kapita yang moderat, ada provinsi-provinsi tertentu yang mengalami tingkat kemiskinan yang sangat tinggi. Hal ini menyoroti disparitas ekonomi antar provinsi dan mengindikasikan bahwa beberapa daerah memerlukan perhatian khusus dalam upaya mengurangi kemiskinan dan meningkatkan kesejahteraan ekonomi.
+
+
+# 5. Discussion
+Analisis data sosio-ekonomi Indonesia tahun 2021 mengungkap beberapa pola penting. Visualisasi menunjukkan bahwa rata-rata lama sekolah di sebagian besar wilayah berada di kisaran 7,5 hingga 9,5 tahun, dengan beberapa outlier yang menandakan ketimpangan akses pendidikan. Beberapa daerah memiliki akses pendidikan yang jauh lebih rendah atau lebih tinggi dibandingkan daerah lainnya, menunjukkan bahwa meskipun banyak wilayah memiliki akses pendidikan yang cukup baik, masih ada ketidakseimbangan yang perlu diperhatikan.
+
+Selain itu, dari bar chart pengeluaran per kapita, terlihat bahwa provinsi seperti Jawa Timur, Jawa Tengah, dan Sumatera Utara memiliki pengeluaran per kapita yang tinggi. Menariknya, Papua juga menunjukkan pengeluaran per kapita yang signifikan meskipun tingkat kemiskinannya tinggi. Ini mengindikasikan adanya dinamika ekonomi yang kompleks di Papua, di mana daya beli mungkin didorong oleh sektor ekonomi tertentu meskipun kemiskinan masih menjadi isu besar.
+
+Terakhir, scatter plot antara persentase penduduk miskin dan pengeluaran per kapita menunjukkan adanya ketimpangan antar wilayah. Banyak provinsi memiliki tingkat kemiskinan rendah dan pengeluaran per kapita moderat, sementara provinsi seperti Maluku, Nusa Tenggara, dan Papua memiliki tingkat kemiskinan tinggi dan pengeluaran per kapita rendah. Hal ini menunjukkan perlunya perhatian khusus untuk mengatasi ketimpangan ekonomi dan meningkatkan kesejahteraan di daerah-daerah tersebut.
+
+
+# 6. Conclusion
+Analisis data kondisi sosio-ekonomi Indonesia tahun 2021 mengungkapkan disparitas yang mencolok antar provinsi, terutama dalam hal persentase penduduk miskin dan Pendapatan Domestik Regional Bruto (PDRB) per kapita. Provinsi-provinsi seperti Jawa Barat, Jawa Tengah, dan Jawa Timur menunjukkan tingkat kemiskinan yang lebih tinggi, sementara Bali dan DKI Jakarta menonjol dengan tingkat kemiskinan yang lebih rendah. Selain itu, perbedaan signifikan terlihat dalam indikator harapan hidup dan rata-rata lama sekolah antar wilayah, di mana provinsi-provinsi di Pulau Jawa cenderung memiliki harapan hidup yang lebih tinggi dan rata-rata lama sekolah yang lebih panjang dibandingkan provinsi-provinsi di luar Jawa.
+
+Analisis ini mendorong pentingnya penggunaan data untuk merancang kebijakan publik yang lebih efektif dalam mengurangi disparitas sosio-ekonomi di Indonesia. Dengan menggunakan pendekatan analisis data seperti yang telah dilakukan, kita dapat memberikan landasan yang kuat bagi pengambil keputusan untuk mengembangkan strategi redistribusi yang lebih tepat sasaran dan berkelanjutan. Hal ini diharapkan dapat membantu meningkatkan kualitas hidup masyarakat secara keseluruhan dan memastikan pembangunan ekonomi yang inklusif di seluruh negeri.
+
+
+# 7. References
+- [Socio-Economic of Indonesia in 2021](https://www.kaggle.com/datasets/dannytheodore/socio-economic-of-indonesia-in-2021?resource=download)
+- [Explanatory Data Analysis (EDA)](https://en.wikipedia.org/wiki/Exploratory_data_analysis)  
+- [Pearson's Correlation](https://ss.mipa.ub.ac.id/korelasi-pearson/)
