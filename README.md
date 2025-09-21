@@ -1,10 +1,10 @@
 # ⚖️ Economic Inequality in Indonesia (2021)
 
-## 📌 Project Overview  
+## 📌 Project Overview   
 This project explores **socio-economic inequality in Indonesia (2021)** using publicly available data from BPS (via Kaggle).  
 The goal is to uncover **patterns, disparities, and insights** across provinces — focusing on poverty, education, life expectancy, and economic output (PDRB).  
 
-I use **R (tidyverse, ggplot2, corrplot)** for data cleaning, EDA, and visualization.
+This is a **group project** developed as part of our coursework, where we collaborate on data cleaning, EDA, and visualization using **R (tidyverse, ggplot2, corrplot)**.
 
 ---
 
